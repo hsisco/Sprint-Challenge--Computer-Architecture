@@ -35,7 +35,9 @@ class CPU:
         self.reg[7] = 0xF4
 
         # Set the flag register
-        self.flag = 0b00000000
+        self.L = 0
+        self.E = 0
+        self.G = 0
 
     # Should accept the address to read and return the value
     def ram_read(self, address):
@@ -46,6 +48,7 @@ class CPU:
         self.ram[address] = self.value
 
     def LDI(self, i, v):
+        # print("LDI")
         self.reg[i] = v
         self.pc += 3
 
@@ -75,7 +78,7 @@ class CPU:
         self.reg[7] += 1
         self.pc += 2
 
-    def CALL(self):
+    def CALL(self, *args):
         # Store next instruction in the stack
         self.reg[7] -= 1
         self.ram[self.reg[7]] = self.pc + 2
@@ -83,7 +86,7 @@ class CPU:
         register_index = self.ram[self.pc + 1]
         self.pc = self.reg[register_index]
 
-    def RET(self):
+    def RET(self, *args):
         # Pop from the stack
         address = self.ram[self.reg[7]]
         register_index = self.ram[self.pc + 1]
@@ -93,38 +96,53 @@ class CPU:
         self.pc = address
 
     def CMP(self, reg_a, reg_b):
+        # print("CMP", reg_a, reg_b)
         self.alu('CMP', reg_a, reg_b)
+        self.pc += 3
 
-    def JMP(self):
+    def JMP(self, *args):
         register_index = self.ram[self.pc + 1]
         address = self.reg[register_index]
         self.pc = address
 
-    def JEQ(self):
+    def JEQ(self, *args):
+        # print("IN JEQ")
         register_index = self.ram[self.pc + 1]
         # Set program counter to value at given register
-        if self.flag == 1:
+        if self.E == 1:
             self.pc = self.reg[register_index]
         else:
             self.pc += 2
 
-    def JNE(self):
+    def JNE(self, *args):
         register_index = self.ram[self.pc + 1]
         # Set program counter to value at given register
-        if self.flag == 0:
+        if self.E == 0:
             self.pc = self.reg[register_index]
         else:
             self.pc += 2
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
+        # print(op, reg_a, reg_b)
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == "CMP":
+            # print("alu: CMP")
+            self.E = 0
+            self.L = 0
+            self.G = 0
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.E = 1
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.G = 1
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.L = 1
         else:
             raise Exception("Unsupported ALU operation")
-
+                
     def load(self, fileName):
         """Load a program into memory"""
         address = 0
