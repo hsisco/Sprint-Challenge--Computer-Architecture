@@ -33,6 +33,7 @@ class CPU:
 
         # Set the stack pointer to R7
         self.reg[7] = 0xF4
+
         # Set the flag register
         self.flag = 0b00000000
 
@@ -44,12 +45,12 @@ class CPU:
     def ram_write(self, address):
         self.ram[address] = self.value
 
-    def LDI(self, *args):
-        self.reg[self.index] = self.value
+    def LDI(self, i, v):
+        self.reg[i] = v
         self.pc += 3
 
-    def PRN(self,*args):
-        print(self.reg[self.index])
+    def PRN(self, i, v):
+        print(self.reg[i])
         self.pc += 2
 
     def HLT(self, *args):
@@ -73,7 +74,6 @@ class CPU:
         self.reg[register_index] = self.ram[self.reg[7]]
         self.reg[7] += 1
         self.pc += 2
-
 
     def CALL(self):
         # Store next instruction in the stack
